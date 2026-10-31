@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enzo Adolfo Rubattino Huarzaya · Programador de videojuegos</title>
+<meta name="description" content="Portfolio de Enzo Adolfo Rubattino Huarzaya, Ingeniero Multimedia especializado en videojuegos. Ensamblador para Game Boy, motores 3D en C++ y OpenGL.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Silkscreen&display=swap">
+<style>
+/*
+  Paleta de 1 bit: papel y tinta. El rojo solo aparece al interactuar
+  (hover, foco, recoger un donut). Así la página tiene carácter sin colorines.
+*/
+:root{
+  --paper:#EFEDE8;
+  --ink:#151515;
+  --grey:#5C5B57;
+  --line:#D3D0C8;
+  --dot:#CBC8C0;
+  --signal:#D9480F;          /* naranja del CV */
+  --signal-dark:#9C3409;
+  --display:'Bricolage Grotesque', system-ui, sans-serif;
+  --body:'Instrument Sans', system-ui, sans-serif;
+  --pixel:'Silkscreen', ui-monospace, monospace;
+  --wrap:1180px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration-thickness:1.5px;text-underline-offset:5px}
+a:hover{color:var(--signal)}
+:focus-visible{outline:2px solid var(--signal);outline-offset:4px}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1;text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+.wrap{max-width:var(--wrap);margin:0 auto;padding-left:28px;padding-right:28px}
+.topbar{display:flex;height:6px}
+.topbar span:nth-child(1){width:min(28%,320px);background:var(--ink)}
+.topbar span:nth-child(2){width:56px;background:var(--signal)}
+.topbar span:nth-child(3){flex:1;background:var(--line)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- Navegación ---------- */
+.nav{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-top:24px;padding-bottom:24px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font:600 17px/1 var(--display);text-decoration:none}
+.brand canvas{width:22px;height:20px;image-rendering:pixelated}
+.nav ul{list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.nav ul a{text-decoration:none;font-size:15px;font-weight:500;color:var(--grey)}
+.nav ul a:hover{color:var(--ink)}
+.cv-link{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border:1.5px solid var(--ink);border-radius:999px;color:var(--ink)!important;font-weight:600!important}
+.cv-link:hover{background:var(--ink);color:var(--paper)!important}
+
+/* ---------- Hero ---------- */
+.hero{padding-top:40px}
+.hero h1{font-weight:800;font-size:clamp(46px,8.6vw,112px);letter-spacing:-0.045em;line-height:.9;font-variation-settings:"opsz" 96}
+.hero h1 span{display:block}
+.hero h1 .first{font-weight:400;color:var(--grey)}
+.name-rule{width:64px;height:6px;margin-top:22px;background:var(--signal)}
+
+/* Pantalla jugable */
+.console{position:relative;margin-top:40px;display:grid;grid-template-columns:150px minmax(0,1fr) 150px;grid-template-areas:"dpad screen buttons";align-items:center;gap:40px;padding:44px 44px 36px;background:#F8F7F3;border:1.5px solid var(--ink);border-radius:44px;box-shadow:0 8px 0 0 var(--ink)}
+.led{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font:400 11px/1 var(--pixel);color:var(--grey)}
+.led::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--signal)}
+.bezel{grid-area:screen;background:var(--ink);border-radius:20px;padding:16px 16px 10px}
+.bezel-label{margin-top:9px;text-align:center;font:400 11px/1 var(--pixel);color:#8E8C86;letter-spacing:.08em}
+.dpad{grid-area:dpad;justify-self:center;display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px)}
+.dpad button{position:relative;border:0;padding:0;background:var(--ink);cursor:pointer;touch-action:none}
+.dpad button:active,.dpad button.on{background:#3A3A38}
+.dpad button::after{content:"";position:absolute;left:50%;top:50%;width:0;height:0;border:6px solid transparent;transform:translate(-50%,-50%)}
+.dpad .up{grid-area:1/2;border-radius:8px 8px 0 0}.dpad .up::after{border-bottom-color:var(--paper);margin-top:-3px}
+.dpad .down{grid-area:3/2;border-radius:0 0 8px 8px}.dpad .down::after{border-top-color:var(--paper);margin-top:3px}
+.dpad .left{grid-area:2/1;border-radius:8px 0 0 8px}.dpad .left::after{border-right-color:var(--paper);margin-left:-3px}
+.dpad .right{grid-area:2/3;border-radius:0 8px 8px 0}.dpad .right::after{border-left-color:var(--paper);margin-left:3px}
+.dpad .mid{grid-area:2/2;background:var(--ink)}
+.buttons{grid-area:buttons;display:flex;flex-direction:column;align-items:center;gap:30px}
+.ab{display:flex;gap:16px;transform:rotate(-20deg)}
+.ab button{display:grid;place-items:center;width:58px;height:58px;border:0;padding:0;border-radius:50%;background:var(--ink);color:var(--paper);font:400 18px/1 var(--pixel);cursor:pointer;touch-action:none;box-shadow:0 5px 0 0 #6E6D69}
+.ab button:hover{background:#3A3A38}
+.ab button:active,.ab button.on{transform:translateY(3px);box-shadow:0 2px 0 0 #6E6D69;background:var(--signal);color:#fff}
+.ab #btn-a{background:var(--signal);color:#fff;box-shadow:0 5px 0 0 var(--signal-dark)}
+.ab #btn-a:hover{background:#C2410C}
+.ab #btn-a:active,.ab #btn-a.on{box-shadow:0 2px 0 0 var(--signal-dark);background:var(--signal-dark)}
+.start{display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;font:400 11px/1 var(--pixel);color:var(--grey)}
+.start span{width:56px;height:14px;border-radius:999px;background:#8E8C86;transform:rotate(-20deg)}
+.start:hover{color:var(--signal)}.start:hover span{background:var(--signal)}
+.console-hint{margin-top:22px;text-align:center;font-size:14px;color:var(--grey)}
+.play{position:relative;border-radius:6px;overflow:hidden;background:var(--paper);height:300px;touch-action:none;cursor:crosshair}
+.play canvas{display:block;width:100%;height:100%}
+.play:focus-within{outline:2px solid var(--signal);outline-offset:2px}
+.hud{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;gap:16px;padding:14px 18px;font:400 13px/1.2 var(--pixel);pointer-events:none}
+.hud span{white-space:nowrap}
+.hud .lives{text-align:right;letter-spacing:.1em}
+.win{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;background:color-mix(in srgb,var(--paper) 88%,transparent);padding:24px}
+.win.show{display:flex}
+.win p:first-child{font:400 22px/1.2 var(--pixel)}
+.win p:nth-child(2){color:var(--grey);max-width:28em}
+.win-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.pill{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;border-radius:999px;font:600 15px/1 var(--body);text-decoration:none;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.pill:hover{background:var(--ink);color:var(--paper)}
+.pill.solid{background:var(--ink);color:var(--paper)}
+.pill.solid:hover{background:var(--signal);border-color:var(--signal);color:#fff}
+
+.intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:48px;padding-top:44px;padding-bottom:88px}
+.intro h2{font-weight:600;font-size:clamp(26px,3vw,36px);letter-spacing:-0.02em;line-height:1.1}
+.intro-text p{font-size:19px;line-height:1.55}
+.intro-text p + p{margin-top:14px;color:var(--grey);font-size:17px}
+.intro-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap}
+
+/* ---------- Premios ---------- */
+.awards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink)}
+.award{display:flex;gap:18px;align-items:center;padding:26px 0}
+.award + .award{padding-left:32px;border-left:1px solid var(--line)}
+.award canvas{flex:none;width:44px;height:44px;image-rendering:pixelated}
+.award strong{display:block;font:600 21px/1.2 var(--display);letter-spacing:-0.01em}
+.award span{color:var(--grey);font-size:15px}
+
+/* ---------- Secciones ---------- */
+section{padding-top:110px}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:48px;align-items:end;margin-bottom:56px}
+.sec-head h2{font-weight:800;font-size:clamp(44px,6vw,76px);letter-spacing:-0.04em}
+.sec-head h2::after{content:"";display:inline-block;width:.16em;height:.16em;margin-left:.08em;background:var(--signal)}
+.sec-head p{color:var(--grey);font-size:18px;max-width:30em}
+
+/* ---------- Juegos ---------- */
+.game{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:56px;align-items:center;padding-top:48px;padding-bottom:48px;border-top:1px solid var(--line)}
+.game:nth-child(even) .shot{order:2}
+.shot{display:block;border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;background:var(--ink);aspect-ratio:16/10}
+.shot img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+.shot:hover img{transform:scale(1.03)}
+.shot.pixelated img{image-rendering:pixelated}
+.game-when{font-size:15px;color:var(--grey)}
+.game h3{font-weight:800;font-size:clamp(34px,4vw,50px);letter-spacing:-0.035em;margin-top:8px}
+.prize{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-size:14px;font-weight:600}
+.prize canvas{width:16px;height:16px;image-rendering:pixelated}
+.game > div > p{margin-top:16px;color:var(--ink)}
+.specs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 24px;margin:22px 0 0;padding:18px 0 0;border-top:1px solid var(--line)}
+.specs dt{font-size:13px;color:var(--grey)}
+.specs dd{margin:2px 0 0;font-weight:600;font-size:15px}
+.game .pill{margin-top:26px}
+
+/* ---------- Habilidades ---------- */
+.skills-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:48px 32px}
+.skill{padding-top:22px;border-top:1.5px solid var(--ink)}
+.skill canvas{display:block;width:48px;height:48px;image-rendering:pixelated}
+.skill h3{margin-top:18px;font-weight:600;font-size:21px;letter-spacing:-0.015em;line-height:1.15}
+.skill.main h3::after{content:"";display:inline-block;width:7px;height:7px;margin-left:9px;vertical-align:.2em;background:var(--signal)}
+.skill p{margin-top:8px;font-size:15px;line-height:1.5;color:var(--grey)}
+.legend{margin-top:40px;font-size:14px;color:var(--grey);display:flex;align-items:center;gap:10px}
+.legend::before{content:"";width:7px;height:7px;background:var(--signal)}
+
+/* ---------- Formación ---------- */
+.edu{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:48px}
+.edu-item{display:grid;grid-template-columns:48px minmax(0,1fr);gap:22px;padding-top:24px;border-top:1.5px solid var(--ink)}
+.edu-item + .edu-item{margin-top:36px}
+.edu-item > canvas,.langs-head canvas{width:48px;height:48px;image-rendering:pixelated}
+.edu-item h3{font-weight:600;font-size:26px;letter-spacing:-0.02em;line-height:1.15}
+.edu-item h3 a{text-decoration:none}
+.edu-item h3 a:hover{color:var(--signal)}
+.edu-item .when{margin-top:6px;color:var(--grey)}
+.tfg{display:flex;gap:12px;align-items:flex-start;margin-top:14px}
+.tfg .mini{flex:none;width:24px;height:24px;image-rendering:pixelated}
+.tfg strong{font-weight:600}
+.edu-links{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.edu-links a{display:inline-flex;align-items:center;min-height:38px;padding:0 15px;border:1.5px solid var(--ink);border-radius:999px;font-size:14px;font-weight:600;text-decoration:none}
+.edu-links a:hover{background:var(--ink);color:var(--paper)}
+.langs{padding-top:24px;border-top:1.5px solid var(--ink)}
+.langs-head{display:flex;align-items:center;gap:16px}
+.langs h3{font-weight:600;font-size:26px;letter-spacing:-0.02em}
+.langs dl{margin:14px 0 0}
+.langs dl div{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.langs dt{font-weight:500}
+.langs dd{margin:0;color:var(--grey)}
+.langs dd a{color:var(--grey)}
+.langs dd a:hover{color:var(--signal)}
+
+/* ---------- Contacto (inversión de 1 bit) ---------- */
+.contact{margin-top:120px;background:var(--ink);color:var(--paper);padding-top:110px;padding-bottom:40px}
+.contact h2{font-weight:800;font-size:clamp(60px,12vw,160px);letter-spacing:-0.05em;line-height:.88}
+.contact-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:48px;margin-top:48px;align-items:end}
+.mail{font:600 clamp(22px,3vw,34px)/1.2 var(--display);letter-spacing:-0.02em;word-break:break-word}
+.contact p{color:#B8B6B0;margin-top:12px}
+.links{list-style:none;margin:0;padding:0;display:grid}
+.links li{border-top:1px solid #3A3A38}
+.links li:last-child{border-bottom:1px solid #3A3A38}
+.links a{display:flex;justify-content:space-between;gap:16px;padding:14px 0;text-decoration:none;font-weight:500}
+.links a span:last-child{color:#B8B6B0}
+.links a:hover span{color:var(--signal)}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-top:96px;padding-top:24px;border-top:1px solid #3A3A38;font-size:14px;color:#B8B6B0}
+.foot span{display:flex;align-items:center;gap:10px}
+.foot canvas{width:22px;height:20px;image-rendering:pixelated}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px){
+  .console{grid-template-columns:1fr 1fr;grid-template-areas:"screen screen" "dpad buttons";gap:28px 16px;padding:40px 22px 28px;border-radius:32px}
+  .intro,.sec-head,.game,.edu,.contact-grid{grid-template-columns:1fr}
+  .intro{gap:20px}
+  .sec-head{gap:16px}
+  .game{gap:28px}
+  .game:nth-child(even) .shot{order:0}
+  .skills-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width: 640px){
+  body{font-size:16px}
+  .wrap{padding-left:20px;padding-right:20px}
+  .nav ul li:not(:last-child){display:none}
+  .play{height:240px}
+  .hud{font-size:11px;padding:12px 12px}
+  .win{gap:10px;padding:14px}
+  .win p:first-child{font-size:17px}
+  .win p:nth-child(2){font-size:14px;line-height:1.4}
+  .win .pill{min-height:40px;padding:0 16px;font-size:14px}
+  .awards{grid-template-columns:1fr}
+  .award + .award{padding-left:0;border-left:0;border-top:1px solid var(--line)}
+  .skills-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:40px 20px}
+  .edu-item{grid-template-columns:36px minmax(0,1fr);gap:14px}
+  .edu-item > canvas,.langs-head canvas{width:36px;height:36px}
+  .edu-item h3,.langs h3{font-size:22px}
+  .skill p{font-size:14px}
+  .specs{grid-template-columns:1fr 1fr}
+  section{padding-top:80px}
+}
+@media (max-width: 340px){
+  .skills-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar" aria-hidden="true"><span></span><span></span><span></span></div>
+<header class="wrap">
+  <nav class="nav" aria-label="Principal">
+    <a class="brand" href="#inicio"><canvas data-sprite="alien" width="12" height="11" aria-hidden="true"></canvas>Enzo Rubattino</a>
+    <ul>
+      <li><a href="#habilidades">Habilidades</a></li>
+      <li><a href="#juegos">Juegos</a></li>
+      <li><a href="#formacion">Formación</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+      <li><a class="cv-link" href="cv.pdf" download>Descargar CV</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="inicio">
+
+  <div class="wrap hero">
+    <h1><span class="first">Enzo Adolfo</span> <span class="last">Rubattino Huarzaya</span></h1>
+    <div class="name-rule" aria-hidden="true"></div>
+
+    <div class="console">
+      <span class="led" aria-hidden="true">ON</span>
+      <div class="dpad" role="group" aria-label="Cruceta para mover al alien">
+        <button class="up" type="button" data-key="ArrowUp" aria-label="Arriba"></button>
+        <button class="left" type="button" data-key="ArrowLeft" aria-label="Izquierda"></button>
+        <span class="mid" aria-hidden="true"></span>
+        <button class="right" type="button" data-key="ArrowRight" aria-label="Derecha"></button>
+        <button class="down" type="button" data-key="ArrowDown" aria-label="Abajo"></button>
+      </div>
+      <div class="bezel">
+    <div class="play" id="play">
+      <canvas id="game" tabindex="0" aria-label="Minijuego de tanques de tres niveles: muévete con la cruceta o las flechas y dispara con A o la barra espaciadora"></canvas>
+      <div class="hud" aria-hidden="true">
+        <span id="hud-left">NIVEL 1/3</span>
+        <span class="lives" id="hud-right">0 PTS</span>
+      </div>
+      <div class="win" id="win" role="status">
+        <p id="win-title">Nivel completado</p>
+        <p id="win-text">Has acabado con todos los tanques.</p>
+        <div class="win-actions">
+          <a class="pill solid" href="#juegos">Ver mis juegos</a>
+          <button class="pill" id="again" type="button">Jugar otra vez</button>
+        </div>
+      </div>
+      <p class="sr-only" id="live" aria-live="polite"></p>
+    </div>
+        <p class="bezel-label" aria-hidden="true">C++ · ASM · OPENGL</p>
+      </div>
+      <div class="buttons">
+        <div class="ab">
+          <button type="button" id="btn-b" aria-label="B: reiniciar la partida" title="B: reiniciar">B</button>
+          <button type="button" id="btn-a" aria-label="A: disparar" title="A: disparar">A</button>
+        </div>
+        <a class="start" href="#juegos" aria-label="Start: ver mis juegos"><span></span>START</a>
+      </div>
+    </div>
+    <p class="console-hint">Tres niveles, tres tipos de tanque y mejoras que sueltan los enemigos al caer. Muévete con la cruceta o las flechas y dispara con A o la barra espaciadora. B reinicia y START te lleva a mis juegos.</p>
+
+    <div class="intro">
+      <h2>Programador de videojuegos e Ingeniero Multimedia.</h2>
+      <div class="intro-text">
+        <p>Me gusta programar cerca del hardware: he hecho un juego de Game Boy en ensamblador y un motor 3D propio en C++ y OpenGL. Termino Ingeniería Multimedia en la Universidad de Alicante, itinerario de Videojuegos.</p>
+        <p>Busco prácticas en un estudio de videojuegos. También me muevo bien en Unity y en desarrollo web.</p>
+        <div class="intro-actions">
+          <a class="pill solid" href="#juegos">Ver mis juegos</a>
+          <a class="pill" href="mailto:enzoadolfo11@gmail.com">Escríbeme</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="awards">
+      <div class="award">
+        <canvas data-sprite="trophy-accent" width="12" height="12" aria-hidden="true"></canvas>
+        <div><strong>Ganador de la Global Game Jam 2025</strong><span>Sede de Alicante, con Bubble Buddies</span></div>
+      </div>
+      <div class="award">
+        <canvas data-sprite="trophy-accent" width="12" height="12" aria-hidden="true"></canvas>
+        <div><strong>Mejor juego de Game Boy de la UA</strong><span>Universidad de Alicante 2024, con Cosmic Muncher</span></div>
+      </div>
+    </div>
+  </div>
+
+  <section id="habilidades" aria-labelledby="habilidades-t">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="habilidades-t">Habilidades</h2>
+        <p>Lo que sé hacer y con qué lo he hecho, de más cerca del hardware a más lejos.</p>
+      </div>
+      <div class="skills-grid">
+        <article class="skill main">
+          <canvas data-icon="cpp" width="12" height="12" aria-hidden="true"></canvas>
+          <h3>C++</h3>
+          <p>Gestión de memoria, ECS y desarrollo de juegos. He hecho un juego desde cero en C++.</p>
+        </article>
+        <article class="skill main">
+          <canvas data-icon="chip" width="12" height="12" aria-hidden="true"></canvas>
+          <h3>Ensamblador</h3>
+          <p>Juegos para Amstrad CPC (Z80) y Game Boy (Sharp LR35902), programando directamente el hardware.</p>
+        </article>
+        <article class="skill main">
+          <canvas data-icon="cube" width="12" height="12" aria-hidden="true"></canvas>
+          <h3>OpenGL</h3>
+          <p>Motor 3D propio en OpenGL con un juego completo funcionando sobre él.</p>
+        </article>
+        <article class="skill main">
+          <canvas data-icon="path" width="12" height="12" aria-hidden="true"></canvas>
+          <h3>Arquitectura de juegos</h3>
+          <p>ECS (Entity Component System), pathfinding para la IA y organización del bucle de juego.</p>
+        </article>
+        <article class="skill main">
+          <canvas data-icon="watch" width="12" height="12" aria-hidden="true"></canvas>
+          <h3>Unity</h3>
+          <p>Varias game jams con Unity: prototipado rápido y diseño creativo. Ganador de la GGJ 2025 en Alicante.</p>
+        </article>
+        <article class="skill">
+          <canvas data-icon="mount" width="12" height="12" aria-hidden="true"></canvas>
+          <h3>Unreal Engine 5</h3>
+          <p>Conocimientos básicos. Explorando sus herramientas y lo que permite hacer.</p>
+        </article>
+        <article class="skill">
+          <canvas data-icon="pad" width="12" height="12" aria-hidden="true"></canvas>
+          <h3>Motores y librerías</h3>
+          <p>Raylib, SFML, CPCtelera y Godot.</p>
+        </article>
+        <article class="skill">
+          <canvas data-icon="code" width="12" height="12" aria-hidden="true"></canvas>
+          <h3>Lenguajes</h3>
+          <p>C, C#, Java, PHP, JavaScript y TypeScript.</p>
+        </article>
+        <article class="skill">
+          <canvas data-icon="web" width="12" height="12" aria-hidden="true"></canvas>
+          <h3>Desarrollo web</h3>
+          <p>HTML, CSS, Bootstrap, Ionic, Node.js, SQL y MongoDB.</p>
+        </article>
+        <article class="skill">
+          <canvas data-icon="audio" width="12" height="12" aria-hidden="true"></canvas>
+          <h3>3D y audio</h3>
+          <p>Modelado en Blender y edición de sonido con Audacity.</p>
+        </article>
+      </div>
+      <p class="legend">Las que más he usado en proyectos reales.</p>
+    </div>
+  </section>
+
+  <section id="juegos" aria-labelledby="juegos-t">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="juegos-t">Juegos</h2>
+        <p>Tres formas distintas de hacer un juego: ensamblador puro para Game Boy, Unity contrarreloj en una jam y un motor propio en C++.</p>
+      </div>
+
+      <div>
+        <article class="game">
+          <a class="shot pixelated" href="https://roscarul.itch.io/cosmic-muncher" target="_blank" rel="noopener">
+            <img src="https://img.itch.zone/aW1nLzE4MzgwNDUzLnBuZw==/original/n%2Fz8uk.png" alt="Portada de Cosmic Muncher" loading="lazy">
+          </a>
+          <div>
+            <p class="game-when">2024, Universidad de Alicante</p>
+            <h3>Cosmic Muncher</h3>
+            <p class="prize"><canvas data-sprite="trophy-accent" width="12" height="12" aria-hidden="true"></canvas>Mejor juego de Game Boy de la UA</p>
+            <p>Un alien adicto al azúcar que roba donuts. Lo programamos íntegramente en ensamblador para la Game Boy original, con un motor ECS hecho a medida.</p>
+            <dl class="specs">
+              <div><dt>Rol</dt><dd>Lead Programmer</dd></div>
+              <div><dt>Plataforma</dt><dd>Game Boy (DMG)</dd></div>
+              <div><dt>Tecnología</dt><dd>Ensamblador LR35902, ECS propio</dd></div>
+              <div><dt>Equipo y tiempo</dt><dd>3 personas, 7 semanas</dd></div>
+            </dl>
+            <a class="pill" href="https://roscarul.itch.io/cosmic-muncher" target="_blank" rel="noopener">Jugar en itch.io</a>
+          </div>
+        </article>
+
+        <article class="game">
+          <a class="shot" href="https://jsala.itch.io/bubblebuddies" target="_blank" rel="noopener">
+            <img src="https://img.itch.zone/aW1nLzE5NTQxMzgzLnBuZw==/original/zf4dJn.png" alt="Portada de Bubble Buddies" loading="lazy">
+          </a>
+          <div>
+            <p class="game-when">2025, Global Game Jam</p>
+            <h3>Bubble Buddies</h3>
+            <p class="prize"><canvas data-sprite="trophy-accent" width="12" height="12" aria-hidden="true"></canvas>Ganador en la sede de Alicante</p>
+            <p>Plataformas 3D en el que guías a un ácaro dentro de una pompa de jabón. Avanzas haciendo ruido con el micrófono. Hecho en menos de 48 horas.</p>
+            <dl class="specs">
+              <div><dt>Rol</dt><dd>Artista 3D y apoyo general</dd></div>
+              <div><dt>Plataforma</dt><dd>PC (Windows)</dd></div>
+              <div><dt>Tecnología</dt><dd>Unity, Blender</dd></div>
+              <div><dt>Tiempo</dt><dd>48 horas</dd></div>
+            </dl>
+            <a class="pill" href="https://jsala.itch.io/bubblebuddies" target="_blank" rel="noopener">Jugar en itch.io</a>
+          </div>
+        </article>
+
+        <article class="game">
+          <a class="shot" href="https://cletus2000.itch.io/donut-panic" target="_blank" rel="noopener">
+            <img src="https://img.itch.zone/aW1nLzIyMTg5MzIyLnBuZw==/original/Z3PS9C.png" alt="Portada de Donut Panic!" loading="lazy">
+          </a>
+          <div>
+            <p class="game-when">Proyecto ABP, Universidad de Alicante</p>
+            <h3>Donut Panic!</h3>
+            <p>Shooter arcade en primera persona con estética de los 90: salva los donuts de una invasión alienígena. Desarrollado desde cero en C++ sobre un motor gráfico propio en OpenGL.</p>
+            <dl class="specs">
+              <div><dt>Rol</dt><dd>Programador</dd></div>
+              <div><dt>Plataforma</dt><dd>Windows y Linux</dd></div>
+              <div><dt>Tecnología</dt><dd>C++, OpenGL, motor propio</dd></div>
+              <div><dt>Mi parte</dt><dd>ECS, pathfinding, música</dd></div>
+            </dl>
+            <a class="pill" href="https://cletus2000.itch.io/donut-panic" target="_blank" rel="noopener">Jugar en itch.io</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="formacion" aria-labelledby="formacion-t">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="formacion-t">Formación</h2>
+      </div>
+      <div class="edu">
+        <div>
+          <div class="edu-item">
+            <canvas data-icon="cap" width="12" height="12" aria-hidden="true"></canvas>
+            <div>
+              <h3><a href="https://web.ua.es/es/grados/grado-en-ingenieria-multimedia/" target="_blank" rel="noopener">Grado en Ingeniería Multimedia</a></h3>
+              <p class="when">Universidad de Alicante, itinerario de Videojuegos. Septiembre de 2021 – junio de 2027 (previsto).</p>
+              <p class="tfg"><canvas class="mini" data-icon="bulb" width="12" height="12" aria-hidden="true"></canvas><span><strong>TFG en curso:</strong> integración de modelos de lenguaje (LLM) en videojuegos.</span></p>
+              <ul class="edu-links">
+                <li><a href="https://web.ua.es/es/grados/grado-en-ingenieria-multimedia/" target="_blank" rel="noopener">El grado en la web de la UA ↗</a></li>
+                <li><a href="https://eps.ua.es/es/ingenieria-multimedia/" target="_blank" rel="noopener">Escuela Politécnica Superior ↗</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="edu-item">
+            <canvas data-icon="cert" width="12" height="12" aria-hidden="true"></canvas>
+            <div>
+              <h3><a href="https://www.cambridgeenglish.org/exams-and-tests/first/" target="_blank" rel="noopener">Cambridge B2 First</a></h3>
+              <p class="when">Cambridge English, 2022. Nivel B2 del Marco Común Europeo de Referencia.</p>
+              <ul class="edu-links">
+                <li><a href="https://www.cambridgeenglish.org/exams-and-tests/first/" target="_blank" rel="noopener">Qué acredita el B2 First ↗</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="langs">
+          <div class="langs-head">
+            <canvas data-icon="talk" width="12" height="12" aria-hidden="true"></canvas>
+            <h3>Idiomas</h3>
+          </div>
+          <dl>
+            <div><dt>Español</dt><dd>Nativo</dd></div>
+            <div><dt>Valenciano</dt><dd>B2</dd></div>
+            <div><dt>Inglés</dt><dd><a href="https://www.cambridgeenglish.org/exams-and-tests/first/" target="_blank" rel="noopener">B2, Cambridge</a></dd></div>
+            <div><dt>Alemán</dt><dd>Aprendiendo</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="contacto" class="contact">
+    <div class="wrap">
+      <h2>¿Hablamos?</h2>
+      <div class="contact-grid">
+        <div>
+          <a class="mail" href="mailto:enzoadolfo11@gmail.com">enzoadolfo11@gmail.com</a>
+          <p>Vivo en Alicante y tengo carnet B y coche propio. Si buscas a alguien para prácticas, escríbeme.</p>
+        </div>
+        <ul class="links">
+          <li><a href="cv.pdf" download><span>Currículum</span><span>PDF</span></a></li>
+          <li><a href="https://enzorh111.itch.io" target="_blank" rel="noopener"><span>itch.io</span><span>enzorh111</span></a></li>
+          <li><a href="https://github.com/enzorh111" target="_blank" rel="noopener"><span>GitHub</span><span>enzorh111</span></a></li>
+          <li><a href="https://www.linkedin.com/in/enzo-adolfo-rubattino-huarzaya/" target="_blank" rel="noopener"><span>LinkedIn</span><span>enzo-adolfo-rubattino-huarzaya</span></a></li>
+        </ul>
+      </div>
+      <div class="foot">
+        <span><canvas data-sprite="alien-light" width="12" height="11" aria-hidden="true"></canvas>Enzo Adolfo Rubattino Huarzaya, 2026</span>
+        <span>Hecho a mano, sin motor gráfico.</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+(() => {
+  // =====================================================================
+  //  Sprites de 1 bit
+  // =====================================================================
+  // Iconos de la página: 1 y 2 = tinta, 3 = papel, . = vacío
+  const ICONS = {
+    alien: ["...1....1...","....1..1....","..22222222..",".2222222222.",".2233223322.",".2213221322.",".2222222222.","..22111122..","...222222...","..2.2..2.2..",".2..2..2..2."],
+    trophy:["..11111111..","111222222111","1.12222221.1","1.12222221.1",".1122222211.","...122221...","....1221....",".....11.....",".....11.....","....1111....","...111111...","...111111..."]
+  };
+  // Juego (mirando hacia arriba): X = tinta, o = papel, . = vacío
+  const PLAYER = [".....XX.....",".....XX.....","XX.XXXXXX.XX","oo.XXXXXX.oo","XX.XXooXX.XX","oo.XXooXX.oo","XX.XXXXXX.XX","oo.XXXXXX.oo","XX.XXXXXX.XX","oo.XXXXXX.oo","XX.XXXXXX.XX","XX........XX"];
+  const BASIC  = [".....XX.....",".....XX.....","XX.XXXXXX.XX","oo.XooooX.oo","XX.XoXXoX.XX","oo.XoXXoX.oo","XX.XooooX.XX","oo.XooooX.oo","XX.XooooX.XX","oo.XooooX.oo","XX.XXXXXX.XX","XX........XX"];
+  const FAST   = [".....XX.....",".....XX.....","XX...XX...XX","oo..XXXX..oo","XX.XXooXX.XX","oo.XoXXoX.oo","XX.XoXXoX.XX","oo.XXooXX.oo","XX..XXXX..XX","oo...XX...oo","XX........XX","XX........XX"];
+  const HEAVY  = ["....X..X....","....X..X....","XX.XXXXXX.XX","oo.XoXoXX.oo","XX.XXoXoX.XX","oo.XoXoXX.oo","XX.XXoXoX.XX","oo.XoXoXX.oo","XX.XXoXoX.XX","oo.XXXXXX.oo","XX.XXXXXX.XX","XX........XX"];
+  const ITEMS = {
+    shield:["XXXXXXXX","XooooooX","XoXXXXoX","XoXooXoX","XoXooXoX",".XoXXoX.","..XooX..","...XX..."],
+    rapid: ["...XX...","..XXXX..",".XX..XX.","XX....XX","...XX...","..XXXX..",".XX..XX.","XX....XX"],
+    life:  [".XX..XX.","XXXXXXXX","XXXXXXXX","XXXXXXXX",".XXXXXX.","..XXXX..","...XX...","........"]
+  };
+  const ITEM_LABEL = { shield: 'ESCUDO', rapid: 'DISPARO RÁPIDO', life: '+1 VIDA' };
+
+  const css = getComputedStyle(document.documentElement);
+  const INK = css.getPropertyValue('--ink').trim();
+  const PAPER = css.getPropertyValue('--paper').trim();
+  const DOT = css.getPropertyValue('--dot').trim();
+  const SIGNAL = css.getPropertyValue('--signal').trim();
+
+  // Iconos de Habilidades: X = tinta, O = naranja, o = papel
+  const SKILL_ICONS = {"cpp": ["............", "............", "..XXXX......", ".XXXXXX.....", "XXX....O..O.", "XX....OOOOOO", "XX.....O..O.", "XXX..XX.....", ".XXXXXX.....", "..XXXX......", "............", "............"], "cube": ["............", "....XOOOOOOX", "..XXO....XXO", ".XXXXXXXX..O", ".X..O...X..O", ".X..O...X..O", ".X..O...X..O", ".X..O...X..O", ".X..OOOOXOOX", ".X......XXX.", ".XXXXXXXX...", "............"], "chip": ["............", "...XXooXX...", ".XXXXXXXXXX.", "...XOXXXX...", ".XXXXXXXXXX.", "...XXooXX...", ".XXXXooXXXX.", "...XXooXX...", ".XXXXXXXXXX.", "...XXXXXX...", "...XXXXXX...", "............"], "watch": [".....XX.....", ".....XX.....", "....XXXX....", "...X....X...", "..X..O...X..", "..X..O...X..", "..X..OOO.X..", "..X......X..", "..X......X..", "...X....X...", "....XXXX....", "............"], "mount": ["........OO..", "........OO..", "............", "...X........", "..XoX.......", "..XXXX..X...", ".XXXXXXXoX..", ".XXXXXXXXXX.", "XXXXXXXXXXXX", "XXXXXXXXXXXX", "............", "............"], "path": ["...X......XX", "...X......XX", "...X.OOOOOOO", "...X.O......", "...X.O......", "...X.O..X...", "...X.O..X...", ".....O..X...", ".....O..X...", "OOOOOO..X...", "XX......X...", "XX......X..."], "code": ["............", ".......O....", "...XX..OX...", "..XX..O.XX..", ".XX...O..XX.", "XX....O...XX", "XX...O....XX", ".XX..O...XX.", "..XX.O..XX..", "...XO..XX...", "....O.......", "............"], "pad": ["............", "............", "............", ".XXXXXXXXXX.", "XXXXXXXXXXXX", "XXXoXXXXOXXX", "XXoooXXXXXXX", "XXXoXXXoXOXX", ".XXXXXXXXXX.", ".XXXXXXXXXX.", ".XXX....XXX.", "............"], "web": ["............", "XXXXXXXXXXXX", "XXOXoXoXXXXX", "XXXXXXXXXXXX", "X..........X", "X.XXXXXXXX.X", "X..........X", "X.XXXXXX...X", "X..........X", "X.OOOO.....X", "XXXXXXXXXXXX", "............"], "audio": ["............", ".....X......", "....XX...O..", "...X.X..O.O.", "XXXXXX.O..O.", "XXXXXX.O..O.", "XXXXXX.O..O.", "XXXXXX.O..O.", "...X.X..O.O.", "....XX...O..", ".....X......", "............"], "cap": ["............", ".....XX.....", "...XXXXXX...", ".XXXXXXXXXX.", "XXXXXXXXXXXO", ".XXXXXXXXXXO", "...XXXXXX..O", "...XXXXXX..O", "...XooooX..O", "...XXXXXX.OO", "..........OO", "............"], "cert": ["XXXXXXXXXXXX", "X..........X", "X.XXXXXXXX.X", "X..........X", "X.XXXXXX...X", "X..........X", "X.XXXX..OO.X", "X......OooOX", "X......OooOX", "XXXXXXX.OO.X", "........OO..", ".......O..O."], "talk": ["XXXXXXXX....", "XXXXXXXX....", "XXooooXX....", "XXXXXXXX....", "XXoooOOOOOOO", "XXXXXOoooooO", ".XX..OoOOOoO", ".X...OoOOooO", ".....OoooooO", ".....OOOOOOO", ".........OO.", "..........O."], "bulb": ["...XXXXXX...", "..XXXXXXXX..", ".X........X.", ".X...OO...X.", ".X..O..O..X.", ".X...OO...X.", "..XX....XX..", "....X..X....", "....XXXX....", "............", "....XXXX....", ".....XX....."]};
+  document.querySelectorAll('canvas[data-icon]').forEach(cv => {
+    const c = cv.getContext('2d');
+    SKILL_ICONS[cv.dataset.icon].forEach((r, y) => [...r].forEach((ch, x) => {
+      if (ch === '.') return;
+      c.fillStyle = ch === 'X' ? INK : ch === 'O' ? SIGNAL : PAPER;
+      c.fillRect(x, y, 1, 1);
+    }));
+  });
+
+  // Iconos pequeños (marca, trofeos, pie)
+  document.querySelectorAll('canvas[data-sprite]').forEach(cv => {
+    const name = cv.dataset.sprite, light = name.endsWith('-light'), accent = name.endsWith('-accent');
+    const rows = ICONS[name.replace(/-(light|accent)$/,'')], c = cv.getContext('2d');
+    const fg = accent ? SIGNAL : (light ? PAPER : INK), bg = light ? INK : PAPER;
+    rows.forEach((r, y) => [...r].forEach((ch, x) => {
+      if (ch === '.') return;
+      c.fillStyle = ch === '3' ? bg : fg;
+      c.fillRect(x, y, 1, 1);
+    }));
+  });
+
+  // Rotaciones de un sprite cuadrado: 0 arriba, 1 derecha, 2 abajo, 3 izquierda
+  function rotations(rows){
+    const n = rows.length, out = [rows];
+    for (let k = 1; k < 4; k++){
+      const prev = out[k-1], next = [];
+      for (let y = 0; y < n; y++){ let line = ''; for (let x = 0; x < n; x++) line += prev[n-1-x][y]; next.push(line); }
+      out.push(next);
+    }
+    return out;
+  }
+  const SPR = { p: rotations(PLAYER), b: rotations(BASIC), f: rotations(FAST), h: rotations(HEAVY) };
+  const DIRS = [[0,-1],[1,0],[0,1],[-1,0]];
+
+  // =====================================================================
+  //  Reglas
+  // =====================================================================
+  // Velocidades en píxeles por segundo a escala de escritorio (se ajustan en móvil)
+  const TYPES = {
+    b: { speed: 52,  hp: 1, fire: [2.2, 4.0], bullet: 190, pts: 100, drop: 0.25 },
+    f: { speed: 100, hp: 1, fire: [2.8, 4.6], bullet: 210, pts: 200, drop: 0.25 },
+    h: { speed: 34,  hp: 3, fire: [1.5, 2.6], bullet: 230, pts: 400, drop: 1.00 }
+  };
+  const LEVELS = [
+    { title: 'NIVEL 1', sub: 'Calentando motores',       list: 'bbbb',    small: 3, clusters: 7,  steel: 0 },
+    { title: 'NIVEL 2', sub: 'Llegan los rápidos',       list: 'bfbfbf',  small: 4, clusters: 9,  steel: 2 },
+    { title: 'NIVEL 3', sub: 'Blindados que te persiguen', list: 'fbhfhbh', small: 5, clusters: 11, steel: 4 }
+  ];
+
+  // =====================================================================
+  //  Estado
+  // =====================================================================
+  const box = document.getElementById('play');
+  const cv = document.getElementById('game');
+  const ctx = cv.getContext('2d');
+  const hudL = document.getElementById('hud-left');
+  const hudR = document.getElementById('hud-right');
+  const win = document.getElementById('win');
+  const winTitle = document.getElementById('win-title');
+  const winText = document.getElementById('win-text');
+  const live = document.getElementById('live');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const TOP = 34;
+  let W = 0, H = 0, P = 3, T = 18, S = 36, K = 1, small = false;
+  let cols = 0, rows = 0, OX = 0, OY = 0, grid = [];
+  let state = 'ready', level = 0, queue = [], enemies = [], bullets = [], parts = [], items = [];
+  let player = null, lives = 3, score = 0, banner = null, shake = 0, paused = false, t = 0, spawnT = 0, spawnIx = 0;
+  let best = 0;
+  try { best = +localStorage.getItem('enzo-tanques-record') || 0; } catch (e) {}
+  const keys = [];
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const randInt = (a, b) => Math.floor(rand(a, b + 1));
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  // =====================================================================
+  //  Tamaño y mapa
+  // =====================================================================
+  function resize(){
+    const r = box.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const changed = Math.round(r.width) !== Math.round(W);
+    W = r.width; H = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    if (changed){
+      small = W < 600;
+      P = small ? 2 : 3; T = 6 * P; S = 2 * T; K = P / 3;
+      cols = Math.floor(W / T); rows = Math.floor((H - TOP - 4) / T);
+      OX = Math.floor((W - cols * T) / 2); OY = TOP + Math.floor((H - TOP - rows * T) / 2);
+      newGame('ready');
+    }
+  }
+
+  const tile = (c, r) => (r < 0 || c < 0 || c >= cols || r >= rows) ? 3 : grid[r][c];
+  const cellFree = (c, r) => !tile(c, r) && !tile(c + 1, r) && !tile(c, r + 1) && !tile(c + 1, r + 1);
+  function boxBlocked(x, y){
+    if (x < 0 || y < 0 || x + S > cols * T || y + S > rows * T) return true;
+    const c0 = Math.floor(x / T), c1 = Math.floor((x + S - 1) / T);
+    const r0 = Math.floor(y / T), r1 = Math.floor((y + S - 1) / T);
+    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) if (grid[r][c]) return true;
+    return false;
+  }
+  const near = (a, b) => Math.abs(a.x - b.x) < S - 1 && Math.abs(a.y - b.y) < S - 1;
+  function tankAt(x, y, self){
+    const p = { x, y };
+    if (player && player !== self && player.alive && near(p, player)) return true;
+    return enemies.some(e => e !== self && (near(p, e) || near(p, { x: e.tx, y: e.ty })));
+  }
+
+  function buildMap(L){
+    grid = Array.from({ length: rows }, () => new Array(cols).fill(0));
+    const half = Math.ceil(cols / 2);
+    const clusters = small ? Math.ceil(L.clusters * 0.6) : L.clusters;
+    for (let i = 0; i < clusters; i++){
+      const w = randInt(1, small ? 2 : 4), h = randInt(1, 3);
+      const c0 = randInt(1, Math.max(1, half - 1 - w)), r0 = randInt(3, Math.max(3, rows - 4 - h));
+      const type = i < L.steel ? 3 : 2;
+      for (let r = r0; r < r0 + h && r < rows; r++) for (let c = c0; c < c0 + w && c < cols; c++){
+        grid[r][c] = type; grid[r][cols - 1 - c] = type;   // mapa simétrico
+      }
+    }
+    // Una pequeña muralla de ladrillo protege tu salida
+    const pc = Math.floor(cols / 2) - 1;
+    for (let c = pc - 2; c <= pc + 3; c++) if (rows - 4 >= 0 && c >= 0 && c < cols) grid[rows - 4][c] = 2;
+    // Zonas de salida siempre despejadas
+    spawnPoints().concat([{ c: pc, r: rows - 2 }]).forEach(p => {
+      for (let r = p.r - 1; r <= p.r + 2; r++) for (let c = p.c - 1; c <= p.c + 2; c++)
+        if (r >= 0 && c >= 0 && r < rows && c < cols) grid[r][c] = 0;
+    });
+  }
+  const spawnPoints = () => [{ c: 0, r: 0 }, { c: Math.floor(cols / 2) - 1, r: 0 }, { c: cols - 2, r: 0 }];
+
+  // =====================================================================
+  //  Flujo de partida
+  // =====================================================================
+  function newGame(next){
+    level = 0; lives = 3; score = 0;
+    startLevel();
+    state = next;
+    win.classList.remove('show');
+  }
+  function startLevel(){
+    const L = LEVELS[level];
+    queue = [...(small ? L.list.slice(0, L.small) : L.list)];
+    enemies = []; bullets = []; items = []; parts = [];
+    buildMap(L);
+    placePlayer(2.5);
+    spawnT = 0.6; spawnIx = 0;
+    banner = { title: L.title, sub: L.sub, time: 1.8 };
+    hud();
+  }
+  function placePlayer(shield){
+    const pc = Math.floor(cols / 2) - 1;
+    player = { x: pc * T, y: (rows - 2) * T, dir: 0, shield, rapid: 0, cool: 0, alive: true };
+  }
+  function begin(){
+    if (state === 'ready'){ state = 'intro'; return true; }
+    return false;
+  }
+  function hud(){
+    const left = queue.length + enemies.length;
+    const hearts = '■'.repeat(Math.max(0, lives));
+    hudL.textContent = small ? `N${level + 1}/3 · QUEDAN ${left}` : `NIVEL ${level + 1}/3 · QUEDAN ${left}`;
+    hudR.textContent = small ? `${score} ${hearts}` : `${score} PTS · ${hearts}`;
+  }
+  function finish(won){
+    state = won ? 'won' : 'over';
+    const record = score > best;
+    if (record){ best = score; try { localStorage.setItem('enzo-tanques-record', String(best)); } catch (e) {} }
+    winTitle.textContent = won ? '¡Has ganado!' : 'Game over';
+    winText.textContent = (won ? 'Has superado los 3 niveles. ' : 'Te han destruido. ') +
+      `Puntos: ${score}. ` + (record ? '¡Nuevo récord!' : `Récord: ${best}.`);
+    live.textContent = winTitle.textContent + '. ' + winText.textContent;
+    setTimeout(() => win.classList.add('show'), 600);
+  }
+
+  // =====================================================================
+  //  Disparos, efectos y objetos
+  // =====================================================================
+  function shoot(o, speed, owner){
+    const [dx, dy] = DIRS[o.dir], b = 2 * P;
+    bullets.push({ x: o.x + S/2 - b/2 + dx * (S/2 - P), y: o.y + S/2 - b/2 + dy * (S/2 - P), dx, dy, speed: speed * K, owner });
+  }
+  function fire(){
+    if (begin()) return;
+    if (state !== 'play' || !player.alive || player.cool > 0) return;
+    const max = player.rapid > 0 ? 3 : 2;
+    if (bullets.filter(b => b.owner === 'p').length >= max) return;
+    shoot(player, 430, 'p');
+    player.cool = player.rapid > 0 ? 0.12 : 0.3;
+  }
+  function explode(x, y, big){
+    const n = big ? 18 : 6;
+    for (let i = 0; i < n; i++){
+      const a = Math.random() * Math.PI * 2, v = rand(big ? 40 : 20, big ? 150 : 70) * K;
+      parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rand(0.25, big ? 0.7 : 0.35), color: big && i % 3 === 0 ? SIGNAL : INK });
+    }
+    if (big && !reduce) shake = 0.22;
+  }
+  function popText(text, x, y){ parts.push({ text, x, y, vy: -30, vx: 0, life: 1.1 }); }
+  function dropItem(e){
+    if (Math.random() > TYPES[e.type].drop) return;
+    const type = pick(lives < 3 ? ['shield', 'rapid', 'life'] : ['shield', 'rapid', 'rapid', 'life']);
+    items.push({ type, x: e.x + S/2 - 5*P, y: e.y + S/2 - 5*P, time: 9 });
+  }
+
+  // =====================================================================
+  //  IA enemiga
+  // =====================================================================
+  const cellOf = o => ({ c: Math.round(o.x / T), r: Math.round(o.y / T) });
+  // Búsqueda en anchura sobre la cuadrícula para que los blindados te persigan
+  function bfsDir(e){
+    const s = cellOf(e), g = cellOf(player);
+    const key = (c, r) => r * cols + c;
+    const seen = new Map([[key(s.c, s.r), -1]]);
+    const q = [[s.c, s.r]];
+    while (q.length){
+      const [c, r] = q.shift();
+      if (Math.abs(c - g.c) <= 1 && Math.abs(r - g.r) <= 1){
+        // Reconstruye el primer paso del camino
+        let k = key(c, r), first = -1;
+        while (seen.get(k) !== -1){ const d = seen.get(k); first = d; const [dx, dy] = DIRS[d]; const cc = (k % cols) - dx, rr = Math.floor(k / cols) - dy; k = key(cc, rr); }
+        return first;
+      }
+      for (let d = 0; d < 4; d++){
+        const nc = c + DIRS[d][0], nr = r + DIRS[d][1], k = key(nc, nr);
+        if (nc < 0 || nr < 0 || nc > cols - 2 || nr > rows - 2 || seen.has(k) || !cellFree(nc, nr)) continue;
+        seen.set(k, d); q.push([nc, nr]);
+      }
+    }
+    return -1;
+  }
+  function facePlayer(e){
+    const dx = player.x - e.x, dy = player.y - e.y;
+    if (Math.abs(dx) < T * 0.8) return dy < 0 ? 0 : 2;
+    if (Math.abs(dy) < T * 0.8) return dx < 0 ? 3 : 1;
+    return -1;
+  }
+  function decide(e){
+    e.px = e.x; e.py = e.y;
+    const { c, r } = cellOf(e);
+    const free = d => { const [dx, dy] = DIRS[d]; return cellFree(c + dx, r + dy) && !tankAt((c + dx) * T, (r + dy) * T, e); };
+    const options = [0, 1, 2, 3].filter(free);
+
+    // Si te tiene a tiro, se gira para disparar
+    const aim = player.alive ? facePlayer(e) : -1;
+    if (aim >= 0 && e.fireT < 0.7 && e.type !== 'f'){ e.dir = aim; e.tx = e.x; e.ty = e.y; e.hold = 0.35; return; }
+
+    let d = -1;
+    if (e.type === 'h' && player.alive){
+      d = bfsDir(e);
+      if (d >= 0 && !free(d)) d = -1;
+      if (d < 0 && aim < 0){ e.fireT = Math.min(e.fireT, 0.2); }   // camino bloqueado: abre paso a cañonazos
+    }
+    if (d < 0 && options.length){
+      const keep = e.type === 'f' ? 0.5 : 0.7;
+      if (options.includes(e.dir) && Math.random() < keep) d = e.dir;
+      else {
+        // Ligera tendencia a acercarse a ti
+        const toward = [];
+        if (player.y > e.y) toward.push(2); else toward.push(0);
+        if (player.x > e.x) toward.push(1); else toward.push(3);
+        const good = options.filter(o => toward.includes(o));
+        d = (good.length && Math.random() < 0.5) ? pick(good) : pick(options);
+      }
+    }
+    if (d < 0){ e.tx = e.x; e.ty = e.y; e.hold = 0.4; return; }
+    e.dir = d;
+    e.tx = (c + DIRS[d][0]) * T; e.ty = (r + DIRS[d][1]) * T;
+  }
+
+  // =====================================================================
+  //  Actualización
+  // =====================================================================
+  function update(dt){
+    parts.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; });
+    parts = parts.filter(p => p.life > 0);
+    shake = Math.max(0, shake - dt);
+    if (paused || state === 'ready' || state === 'won' || state === 'over') return;
+
+    if (state === 'intro' || state === 'clear'){
+      banner.time -= dt;
+      if (banner.time <= 0){
+        if (state === 'clear'){ level++; startLevel(); state = 'intro'; }
+        else { state = 'play'; banner = null; }
+      }
+      return;
+    }
+
+    // --- Aparición de enemigos ---
+    const maxAlive = small ? 2 : 3;
+    spawnT -= dt;
+    if (queue.length && enemies.length < maxAlive && spawnT <= 0){
+      const pts = spawnPoints();
+      for (let i = 0; i < pts.length; i++){
+        const sp = pts[(spawnIx + i) % pts.length], x = sp.c * T, y = sp.r * T;
+        if (!tankAt(x, y, null)){
+          const type = queue.shift();
+          enemies.push({ type, hp: TYPES[type].hp, x, y, tx: x, ty: y, px: x, py: y, dir: 2, spark: 0.8, flash: 0, hold: 0, stuck: 0, fireT: rand(...TYPES[type].fire) });
+          spawnIx = (spawnIx + i + 1) % pts.length;
+          spawnT = rand(1.2, 2.2);
+          break;
+        }
+      }
+    }
+
+    // --- Jugador ---
+    if (player.alive){
+      player.cool = Math.max(0, player.cool - dt);
+      player.shield = Math.max(0, player.shield - dt);
+      player.rapid = Math.max(0, player.rapid - dt);
+      const k = keys[keys.length - 1];
+      if (k !== undefined){
+        if ((k % 2) !== (player.dir % 2)){
+          // Al girar se alinea con la cuadrícula para encajar por los pasillos
+          if (k % 2 === 0){ const sx = Math.round(player.x / T) * T; if (!boxBlocked(sx, player.y) && !tankAt(sx, player.y, player)) player.x = sx; }
+          else { const sy = Math.round(player.y / T) * T; if (!boxBlocked(player.x, sy) && !tankAt(player.x, sy, player)) player.y = sy; }
+        }
+        player.dir = k;
+        let step = 115 * K * dt;
+        const [dx, dy] = DIRS[k];
+        for (let i = 0; i < 4 && step > 0.2; i++){
+          const nx = player.x + dx * step, ny = player.y + dy * step;
+          if (!boxBlocked(nx, ny) && !tankAt(nx, ny, player)){ player.x = nx; player.y = ny; break; }
+          step /= 2;
+        }
+      }
+      // Recoger objetos
+      items = items.filter(it => {
+        it.time -= dt;
+        if (Math.abs(it.x + 5*P - (player.x + S/2)) < S/2 + 3*P && Math.abs(it.y + 5*P - (player.y + S/2)) < S/2 + 3*P){
+          if (it.type === 'shield') player.shield = 7;
+          if (it.type === 'rapid') player.rapid = 9;
+          if (it.type === 'life') lives = Math.min(5, lives + 1);
+          score += 50; popText(ITEM_LABEL[it.type], player.x + S/2, player.y - 4); hud();
+          live.textContent = ITEM_LABEL[it.type];
+          return false;
+        }
+        return it.time > 0;
+      });
+    }
+
+    // --- Enemigos ---
+    enemies.forEach(e => {
+      if (e.spark > 0){ e.spark -= dt; return; }
+      const ty = TYPES[e.type];
+      e.flash = Math.max(0, e.flash - dt);
+      e.fireT -= dt;
+      if (e.hold > 0){ e.hold -= dt; }
+      else if (e.x === e.tx && e.y === e.ty) decide(e);
+      else {
+        const dx = e.tx - e.x, dy = e.ty - e.y, dist = Math.hypot(dx, dy);
+        const step = Math.min(dist, ty.speed * K * dt);
+        const nx = e.x + dx / dist * step, ny = e.y + dy / dist * step;
+        if (player.alive && near({ x: nx, y: ny }, player)){
+          e.stuck += dt;
+          if (e.stuck > 0.5){ e.tx = e.px; e.ty = e.py; e.dir = (e.dir + 2) % 4; e.stuck = 0; }
+        } else {
+          e.x = nx; e.y = ny; e.stuck = 0;
+          if (Math.abs(e.x - e.tx) < 0.01 && Math.abs(e.y - e.ty) < 0.01){ e.x = e.tx; e.y = e.ty; }
+        }
+      }
+      if (e.fireT <= 0 && player.alive){
+        const aim = facePlayer(e);
+        if (aim === e.dir || Math.random() < 0.5) shoot(e, ty.bullet, 'e');
+        e.fireT = rand(...ty.fire);
+      }
+    });
+
+    // --- Balas ---
+    const b = 2 * P, fw = cols * T, fh = rows * T;
+    const dead = new Set();
+    bullets.forEach((bl, i) => {
+      if (dead.has(bl)) return;
+      bl.x += bl.dx * bl.speed * dt; bl.y += bl.dy * bl.speed * dt;
+      const cx = bl.x + b/2, cy = bl.y + b/2;
+      if (cx < 0 || cy < 0 || cx > fw || cy > fh){ dead.add(bl); explode(Math.max(0, Math.min(fw, cx)), Math.max(0, Math.min(fh, cy)), false); return; }
+
+      // Muros: comprueba las dos baldosas que cubre el frente de la bala
+      const fx = cx + bl.dx * b/2, fy = cy + bl.dy * b/2;
+      const probes = bl.dx ? [[fx, cy - b/2], [fx, cy + b/2 - 1]] : [[cx - b/2, fy], [cx + b/2 - 1, fy]];
+      let hitWall = false;
+      probes.forEach(([px, py]) => {
+        const c = Math.floor(px / T), r = Math.floor(py / T);
+        const v = tile(c, r);
+        if (v && r >= 0 && c >= 0 && r < rows && c < cols){
+          hitWall = true;
+          if (v === 2 || v === 1) grid[r][c] = v - 1;
+        }
+      });
+      if (hitWall){ dead.add(bl); explode(cx, cy, false); return; }
+
+      // Choque entre balas
+      const other = bullets.find(o => o !== bl && !dead.has(o) && o.owner !== bl.owner && Math.abs(o.x - bl.x) < b && Math.abs(o.y - bl.y) < b);
+      if (other){ dead.add(bl); dead.add(other); explode(cx, cy, false); return; }
+
+      if (bl.owner === 'p'){
+        const e = enemies.find(e => e.spark <= 0 && cx > e.x && cx < e.x + S && cy > e.y && cy < e.y + S);
+        if (e){
+          dead.add(bl); e.hp--; e.flash = 0.25;
+          if (e.hp <= 0){
+            enemies = enemies.filter(o => o !== e);
+            score += TYPES[e.type].pts; explode(e.x + S/2, e.y + S/2, true);
+            popText(String(TYPES[e.type].pts), e.x + S/2, e.y);
+            dropItem(e); hud();
+            if (!queue.length && !enemies.length){
+              if (level === LEVELS.length - 1){ score += 500 + lives * 200; hud(); finish(true); }
+              else { score += 500; hud(); state = 'clear'; banner = { title: 'NIVEL SUPERADO', sub: '+500 puntos', time: 1.8 }; }
+            }
+          } else explode(cx, cy, false);
+        }
+      } else if (player.alive && cx > player.x && cx < player.x + S && cy > player.y && cy < player.y + S){
+        dead.add(bl);
+        if (player.shield > 0){ explode(cx, cy, false); return; }
+        lives--; explode(player.x + S/2, player.y + S/2, true); hud();
+        live.textContent = `Te han dado. Te quedan ${Math.max(0, lives)} vidas.`;
+        if (lives <= 0){ player.alive = false; finish(false); }
+        else placePlayer(2.5);
+      }
+    });
+    bullets = bullets.filter(bl => !dead.has(bl));
+  }
+
+  // =====================================================================
+  //  Dibujo
+  // =====================================================================
+  function sprite(rows, x, y, ink){
+    for (let r = 0; r < rows.length; r++) for (let c = 0; c < rows[r].length; c++){
+      const ch = rows[r][c]; if (ch === '.') continue;
+      ctx.fillStyle = ch === 'X' ? ink : PAPER;
+      ctx.fillRect(Math.round(x + c*P), Math.round(y + r*P), P, P);
+    }
+  }
+  function drawTile(v, x, y){
+    ctx.fillStyle = INK;
+    if (v === 2){
+      ctx.fillRect(x, y, T, T);
+      ctx.fillStyle = PAPER;
+      const m = Math.max(1, P / 2);
+      ctx.fillRect(x, y + T/2 - m/2, T, m);
+      ctx.fillRect(x + T/2, y, m, T/2);
+      ctx.fillRect(x + T/4, y + T/2, m, T/2);
+    } else if (v === 1){
+      for (let i = 0; i < T; i += P*2) for (let j = 0; j < T; j += P*2) ctx.fillRect(x + i + ((j/(P*2)) % 2) * P, y + j, P, P);
+    } else if (v === 3){
+      ctx.fillRect(x, y, T, T);
+      ctx.fillStyle = PAPER; ctx.fillRect(x + P, y + P, T - 2*P, T - 2*P);
+      ctx.fillStyle = INK; ctx.fillRect(x + 2*P, y + 2*P, T - 4*P, T - 4*P);
+    }
+  }
+  function drawBanner(title, sub){
+    const h = small ? 54 : 70, y = OY + (rows * T - h) / 2;
+    ctx.fillStyle = PAPER; ctx.fillRect(0, y, W, h);
+    ctx.fillStyle = INK; ctx.fillRect(0, y, W, 1.5); ctx.fillRect(0, y + h - 1.5, W, 1.5);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `${small ? 15 : 20}px Silkscreen, monospace`;
+    ctx.fillText(title, W / 2, y + h * 0.38);
+    ctx.fillStyle = '#5C5B57';
+    ctx.font = `${small ? 10 : 12}px Silkscreen, monospace`;
+    ctx.fillText(sub, W / 2, y + h * 0.72);
+  }
+
+  function draw(){
+    ctx.save();
+    if (shake > 0) ctx.translate(rand(-2, 2), rand(-2, 2));
+    ctx.fillStyle = PAPER; ctx.fillRect(-4, -4, W + 8, H + 8);
+    ctx.fillStyle = INK; ctx.fillRect(0, TOP - 2, W, 1);
+
+    ctx.save();
+    ctx.translate(OX, OY);
+    ctx.fillStyle = DOT;
+    for (let x = T/2; x < cols * T; x += T * 1.5) for (let y = T/2; y < rows * T; y += T * 1.5) ctx.fillRect(x, y, 2, 2);
+
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (grid[r][c]) drawTile(grid[r][c], c * T, r * T);
+
+    items.forEach(it => {
+      if (it.time < 2.5 && Math.floor(t * 8) % 2) return;
+      ctx.fillStyle = INK; ctx.fillRect(it.x, it.y, 10*P, 10*P);
+      ctx.fillStyle = PAPER; ctx.fillRect(it.x + P/2, it.y + P/2, 9*P, 9*P);
+      sprite(ITEMS[it.type], it.x + P, it.y + P, INK);
+    });
+
+    enemies.forEach(e => {
+      if (e.spark > 0){
+        const k = Math.floor(e.spark * 10) % 2 ? 1 : 2, cx = e.x + S/2, cy = e.y + S/2;
+        ctx.fillStyle = INK;
+        ctx.fillRect(cx - P/2, cy - k*3*P, P, k*6*P); ctx.fillRect(cx - k*3*P, cy - P/2, k*6*P, P);
+        return;
+      }
+      const flashing = e.flash > 0 && Math.floor(t * 20) % 2 === 0;
+      sprite(SPR[e.type][e.dir], e.x, e.y, flashing ? SIGNAL : INK);
+    });
+
+    if (player.alive){
+      const blink = player.shield > 0 && !reduce && Math.floor(t * 12) % 2 === 0;
+      sprite(SPR.p[player.dir], player.x, player.y, player.rapid > 0 && Math.floor(t * 6) % 2 ? SIGNAL : INK);
+      if (player.shield > 0 && !blink){
+        ctx.fillStyle = INK;
+        for (let i = -P; i < S + P; i += 2*P){
+          ctx.fillRect(player.x + i, player.y - 2*P, P, P); ctx.fillRect(player.x + i, player.y + S + P, P, P);
+          ctx.fillRect(player.x - 2*P, player.y + i, P, P); ctx.fillRect(player.x + S + P, player.y + i, P, P);
+        }
+      }
+    }
+
+    const b = 2 * P;
+    bullets.forEach(bl => { ctx.fillStyle = bl.owner === 'p' ? SIGNAL : INK; ctx.fillRect(Math.round(bl.x), Math.round(bl.y), b, b); });
+
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `${small ? 9 : 11}px Silkscreen, monospace`;
+    parts.forEach(p => {
+      if (p.text){ ctx.fillStyle = INK; ctx.globalAlpha = Math.min(1, p.life * 2); ctx.fillText(p.text, p.x, p.y); ctx.globalAlpha = 1; }
+      else { ctx.fillStyle = p.color; ctx.fillRect(Math.round(p.x), Math.round(p.y), P, P); }
+    });
+    ctx.restore();
+
+    if (state === 'ready') drawBanner('PULSA A PARA EMPEZAR', small ? 'Cruceta para moverte, A para disparar' : 'Flechas o cruceta para moverte · A o espacio para disparar');
+    else if ((state === 'intro' || state === 'clear') && banner) drawBanner(banner.title, banner.sub);
+    else if (paused && state === 'play') drawBanner('PAUSA', 'Vuelve aquí para seguir');
+    ctx.restore();
+  }
+
+  let last = performance.now();
+  function loop(now){
+    const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+    update(dt); draw();
+    requestAnimationFrame(loop);
+  }
+
+  // =====================================================================
+  //  Controles
+  // =====================================================================
+  const KEYMAP = { ArrowUp:0, w:0, ArrowRight:1, d:1, ArrowDown:2, s:2, ArrowLeft:3, a:3 };
+  const press = d => { begin(); if (!keys.includes(d)) keys.push(d); };
+  const release = d => { const i = keys.indexOf(d); if (i >= 0) keys.splice(i, 1); };
+  cv.addEventListener('keydown', e => {
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k in KEYMAP){ press(KEYMAP[k]); e.preventDefault(); }
+    else if (k === ' ' || k === 'j' || k === 'Enter'){ fire(); e.preventDefault(); }
+  });
+  cv.addEventListener('keyup', e => {
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k in KEYMAP) release(KEYMAP[k]);
+  });
+  cv.addEventListener('blur', () => keys.length = 0);
+  cv.addEventListener('pointerdown', () => { cv.focus({ preventScroll: true }); fire(); });
+
+  const DPAD = { ArrowUp:0, ArrowRight:1, ArrowDown:2, ArrowLeft:3 };
+  document.querySelectorAll('.dpad button').forEach(btn => {
+    const d = DPAD[btn.dataset.key];
+    const on = e => { e.preventDefault(); press(d); btn.classList.add('on'); };
+    const off = () => { release(d); btn.classList.remove('on'); };
+    btn.addEventListener('pointerdown', on);
+    ['pointerup','pointerleave','pointercancel'].forEach(ev => btn.addEventListener(ev, off));
+    btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') on(e); });
+    btn.addEventListener('keyup', off);
+  });
+
+  const btnA = document.getElementById('btn-a'), btnB = document.getElementById('btn-b');
+  btnA.addEventListener('pointerdown', e => { e.preventDefault(); btnA.classList.add('on'); fire(); });
+  ['pointerup','pointerleave','pointercancel'].forEach(ev => btnA.addEventListener(ev, () => btnA.classList.remove('on')));
+  btnA.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fire(); } });
+  btnB.addEventListener('click', () => { newGame('intro'); cv.focus({ preventScroll: true }); });
+  document.getElementById('again').addEventListener('click', () => { newGame('intro'); cv.focus({ preventScroll: true }); });
+
+  // Pausa automática cuando la consola sale de la pantalla
+  new IntersectionObserver(([en]) => { paused = en.intersectionRatio < 0.3; }, { threshold: [0, 0.3, 1] }).observe(box);
+
+  new ResizeObserver(resize).observe(box);
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
